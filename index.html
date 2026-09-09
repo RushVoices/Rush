@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rush — Everyone has a voice. We give you all of them.</title>
+<meta name="description" content="Rush turns one voice into a network of AI personas: disclosed, owned on-chain, and yours to scale.">
+<meta property="og:title" content="Rush — AI personas, disclosed and owned">
+<meta property="og:description" content="Everyone has a voice. We give you all of them.">
+<meta property="og:image" content="https://raw.githubusercontent.com/RushVoices/Rush/main/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg transform='rotate(-14 62 38)'%3E%3Crect x='42' y='18' width='40' height='40' rx='9' fill='%2317153A'/%3E%3C/g%3E%3Cg transform='rotate(-7 54 50)'%3E%3Crect x='33' y='29' width='42' height='42' rx='9.5' fill='%232E3AFF'/%3E%3C/g%3E%3Crect x='22' y='40' width='44' height='44' rx='10' fill='%23FF4D6D'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>html,body{margin:0;background:#F2EFE7}#root:empty::before{content:"Loading Rush…";display:block;padding:40px;font-family:sans-serif;color:#17153A}</style>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.26.4/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef } = React;
+
+const css = `
+[data-t=hero],[data-t=who],[data-t=reg],[data-t=wait]{--bg:#F2EFE7;--fg:#17153A}[data-t=band],[data-t=docs]{--bg:#17153A;--fg:#F2EFE7}[data-t=gen]{--bg:#2E3AFF;--fg:#fff}
+.rush{--paper:#F2EFE7;--ink:#17153A;--cobalt:#2E3AFF;--coral:#FF4D6D;--mist:#D9D6E8;--lime:#D8FF4A;
+ font-family:'Instrument Sans',-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--fg);transition:background .9s cubic-bezier(.6,0,.2,1),color .9s;line-height:1.5;overflow-x:hidden}
+.rush *{box-sizing:border-box;margin:0;padding:0}
+.rush h1,.rush h2,.rush h3{font-family:'Syne','Avenir Next','Helvetica Neue',Arial,sans-serif;letter-spacing:-.02em;line-height:1}
+.rush section{padding:clamp(70px,11vh,130px) clamp(20px,5vw,72px);position:relative}
+.rush .wrap{max-width:1200px;margin:0 auto}
+.rush button{font:inherit;cursor:pointer}
+.rush :focus-visible{outline:3px solid var(--coral);outline-offset:3px}
+.nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:16px clamp(20px,5vw,72px);mix-blend-mode:difference;color:#fff}
+.mark{font-family:'Syne','Avenir Next','Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:28px;letter-spacing:-.05em;text-decoration:none;color:inherit}
+.mark i{font-style:normal;display:inline-block;transform:skewX(-14deg)}
+.nav ul{display:flex;gap:26px;list-style:none;font-weight:500}
+.navlink{background:none;border:0;color:inherit;opacity:.8;font-weight:500;font-size:16px;padding:0}.navlink:hover{opacity:1}
+.mark{background:none;border:0}
+@media(max-width:760px){.nav ul{display:none}}
+.wallet{border:1.5px solid currentColor;background:transparent;color:inherit;padding:9px 16px;border-radius:999px;font-weight:600;font-size:14px}
+.hero{min-height:100svh;display:grid;grid-template-columns:1.1fr 1fr;gap:40px;align-items:center}
+.hero h1{font-size:clamp(44px,7vw,108px);font-weight:800;line-height:.92}
+.hero h1 span{display:block}
+.hero h1 .many{color:var(--cobalt)}
+.hero p{font-size:clamp(17px,1.5vw,21px);max-width:44ch;margin:26px 0 34px}
+.cta{display:inline-flex;align-items:center;background:var(--fg);color:var(--bg);border:0;padding:15px 24px;border-radius:999px;font-weight:600;font-size:16px;text-decoration:none;transition:transform .2s;margin:0 10px 10px 0}
+.cta:hover{transform:translateY(-2px)}
+.cta.ghost{background:transparent;color:var(--fg);border:1.5px solid var(--fg)}
+@media(max-width:900px){.hero{grid-template-columns:1fr;padding-top:70px}}
+.field{position:relative;aspect-ratio:1;max-width:540px;width:100%;margin-inline:auto}
+.tile{position:absolute;left:50%;top:50%;width:19%;aspect-ratio:1;border-radius:12px;background:var(--ink);color:var(--paper);display:flex;flex-direction:column;justify-content:flex-end;padding:8px;font-size:clamp(9px,.9vw,12px);line-height:1.15;transform:translate(-50%,-50%) scale(.2);opacity:0;transition:transform 1.1s cubic-bezier(.2,.9,.2,1),opacity .6s}
+.tile b{font-family:'Syne','Avenir Next','Helvetica Neue',Arial,sans-serif;font-size:1.15em;display:block;margin-bottom:2px}
+.tile.you{background:var(--coral);z-index:2;transform:translate(-50%,-50%) scale(1);opacity:1;font-size:clamp(11px,1.1vw,14px)}
+.tile.c1{background:var(--cobalt)}.tile.c3{background:#5A5BFF}.tile.c4{background:#2A2760}
+.field.go .tile.you{transform:translate(-50%,-50%) scale(.85)}
+.band{background:var(--ink);color:var(--paper)}
+.band .wrap{display:grid;grid-template-columns:1fr 1fr;gap:52px;align-items:start}
+.band h2{font-size:clamp(34px,4.4vw,62px);font-weight:700}
+.band p{font-size:18px;max-width:52ch;margin-bottom:18px;opacity:.9}
+@media(max-width:900px){.band .wrap{grid-template-columns:1fr}}
+.who h2{font-size:clamp(34px,4.4vw,62px);font-weight:700;max-width:16ch;margin-bottom:50px}
+.cols{display:grid;grid-template-columns:1fr 1fr}
+.col{padding:34px 38px 42px;border-top:2px solid var(--fg)}
+.col:first-child{border-right:2px solid var(--fg)}
+.col h3{font-size:29px;margin-bottom:10px}
+.col .tag{display:inline-block;font-size:13px;font-weight:600;background:var(--lime);color:var(--ink);padding:3px 10px;border-radius:6px;margin-bottom:16px}
+.col p{max-width:40ch;margin-bottom:14px;font-size:17px}
+.col ul{list-style:none;margin-top:16px}
+.col li{padding:11px 0;border-top:1px solid color-mix(in srgb,var(--fg) 25%,transparent);font-size:16px}
+@media(max-width:900px){.cols{grid-template-columns:1fr}.col:first-child{border-right:0}.col{padding:26px 0}}
+.gen{background:var(--cobalt);color:#fff;min-height:100vh}
+.gen h2{font-size:clamp(40px,6vw,86px);font-weight:800;line-height:.95;clip-path:inset(0 100% 0 0);transition:clip-path 1.1s cubic-bezier(.7,0,.2,1)}
+.gen.in h2{clip-path:inset(0 0 0 0)}
+.gen .lead{font-size:19px;max-width:54ch;margin:22px 0 36px;opacity:.92}
+.genGrid{display:grid;grid-template-columns:360px 1fr;gap:36px;align-items:start}
+@media(max-width:960px){.genGrid{grid-template-columns:1fr}}
+.form{display:grid;gap:14px}
+.form label{display:grid;gap:6px;font-size:14px;font-weight:600}
+.form input,.form select,.form textarea{font:inherit;font-size:16px;padding:12px 14px;border-radius:10px;border:1.5px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);color:#fff}
+.form input::placeholder,.form textarea::placeholder{color:rgba(255,255,255,.55)}
+.form select option{color:#17153A}
+.seg{display:flex;border:1.5px solid rgba(255,255,255,.35);border-radius:10px;overflow:hidden}
+.seg button{flex:1;background:transparent;color:#fff;border:0;padding:11px;font-weight:600}
+.seg button[aria-pressed="true"]{background:#fff;color:var(--cobalt)}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.btn{background:var(--lime);color:var(--ink);border:0;padding:13px 22px;border-radius:999px;font-weight:700;font-size:15px;transition:transform .2s}
+.btn:hover{transform:translateY(-2px)}
+.btn:disabled{opacity:.5;cursor:wait;transform:none}
+.btn.line{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.5)}
+.status{font-size:14px;opacity:.85;min-height:20px}
+.deck{display:grid;gap:18px}
+.empty{border:1.5px dashed rgba(255,255,255,.4);border-radius:18px;padding:44px 30px;font-size:17px;max-width:46ch}
+.card{background:var(--paper);color:var(--ink);border-radius:18px;padding:24px 26px;display:grid;grid-template-columns:1fr auto;gap:8px 22px;animation:land .7s cubic-bezier(.2,.9,.2,1)}
+@keyframes land{from{transform:perspective(900px) rotateX(18deg) translateY(30px);opacity:0}}
+.card h3{font-size:29px;font-weight:800}
+.card .handle{font-weight:600;color:var(--cobalt)}
+.card .ai{grid-column:1/-1;display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;background:var(--ink);color:var(--paper);padding:5px 12px;border-radius:999px;width:max-content;max-width:100%}
+.card .ai::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--lime);flex:none}
+.card dl{grid-column:1/-1;display:grid;grid-template-columns:105px 1fr;gap:8px 14px;margin-top:10px;font-size:15px}
+.card dt{font-weight:600;color:#5b588a}
+.card .posts{grid-column:1/-1;display:grid;gap:8px;margin-top:6px}
+.card .post{background:#fff;border-radius:12px;padding:12px 14px;font-size:15px;border:1px solid var(--mist)}
+.card .actions{grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.card .actions .btn{background:var(--ink);color:var(--paper);padding:11px 18px;font-size:14px}
+.card .actions .btn.line{background:transparent;color:var(--ink);border-color:var(--ink)}
+.fp{grid-column:1/-1;font-size:12px;color:#5b588a;word-break:break-all;margin-top:6px}
+.fp b{color:var(--cobalt)}
+.signed{color:var(--cobalt);font-weight:600;margin-top:4px}
+.reg .wrap{display:grid;grid-template-columns:1fr 1fr;gap:52px;align-items:center}
+.reg h2{font-size:clamp(34px,4.6vw,64px);font-weight:700}
+.reg p{font-size:18px;max-width:46ch;margin:20px 0}
+.ledger{background:var(--ink);color:var(--paper);border-radius:18px;padding:24px;font-size:14px}
+.ledger .line{display:grid;grid-template-columns:110px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.12);word-break:break-all}
+.ledger .line:last-child{border:0}
+.ledger .k{opacity:.6}.ledger .ok{color:var(--lime)}.ledger .warn{color:var(--coral)}
+@media(max-width:900px){.reg .wrap{grid-template-columns:1fr}}
+.docs{background:var(--ink);color:var(--paper)}
+.docs h2{font-size:clamp(38px,5.4vw,80px);font-weight:800;line-height:.95;margin-bottom:14px}
+.docs .lead{font-size:18px;max-width:54ch;margin-bottom:40px;opacity:.85}
+.docGrid{display:grid;grid-template-columns:240px 1fr;gap:40px;align-items:start}
+.docNav{display:grid;gap:4px;position:sticky;top:80px}
+.docNav button{text-align:left;background:none;border:0;color:var(--paper);opacity:.65;padding:10px 14px;border-radius:10px;font-weight:600;font-size:15px;border-left:2px solid transparent}
+.docNav button:hover{opacity:1}
+.docNav button[aria-current="true"]{opacity:1;background:rgba(255,255,255,.08);border-left-color:var(--lime)}
+.docBody{background:var(--paper);color:var(--ink);border-radius:20px;padding:36px 40px;min-height:420px;animation:land .5s cubic-bezier(.2,.9,.2,1)}
+.docBody h3{font-size:34px;margin-bottom:18px}
+.docBody h4{font-size:19px;margin:24px 0 8px}
+.docBody p{font-size:17px;max-width:66ch;margin-bottom:14px}
+.docBody ul{margin:6px 0 16px 0;padding-left:0;list-style:none}
+.docBody li{padding:9px 0 9px 22px;border-top:1px solid var(--mist);font-size:16px;position:relative;max-width:66ch}
+.docBody li::before{content:"";position:absolute;left:0;top:17px;width:8px;height:8px;border-radius:50%;background:var(--cobalt)}
+.docBody pre{background:var(--ink);color:var(--lime);padding:16px 18px;border-radius:12px;font-size:14px;overflow:auto;margin:8px 0 16px}
+.docFoot{margin-top:24px}
+.docFoot .btn{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+@media(max-width:860px){.docGrid{grid-template-columns:1fr}.docNav{position:static;display:flex;flex-wrap:wrap}.docBody{padding:26px 22px}}
+.wait h2{font-size:clamp(38px,5.4vw,80px);font-weight:800;line-height:.95;margin-bottom:16px}
+.wait .sub{font-size:18px;max-width:52ch;margin-bottom:34px}
+.wlForm{display:grid;gap:12px;max-width:520px}
+.wlForm input{font:inherit;font-size:17px;padding:15px 16px;border-radius:12px;border:2px solid var(--fg);background:#fff;color:var(--ink)}
+.wlForm .cta{justify-content:center;margin:4px 0 0;font-size:17px}
+.seg.dark{border-color:var(--fg)}
+.seg.dark button{color:var(--fg)}
+.seg.dark button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.wlDone{background:var(--ink);color:var(--paper);border-radius:16px;padding:24px 26px;font-size:18px;max-width:560px;animation:land .6s cubic-bezier(.2,.9,.2,1)}
+.foot{padding:60px clamp(20px,5vw,72px);background:var(--ink);color:var(--paper)}
+.foot .wrap{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:end}
+.foot .mark{font-size:60px}
+.foot p{max-width:44ch;opacity:.85;font-size:15px}
+@media(max-width:700px){.foot .wrap{grid-template-columns:1fr}}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,120px);background:var(--ink);color:var(--paper);padding:12px 18px;border-radius:12px;font-size:14px;z-index:60;transition:transform .4s cubic-bezier(.2,.9,.2,1);max-width:90vw}
+.toast.show{transform:translate(-50%,0)}
+@media(prefers-reduced-motion:reduce){.rush *{transition:none!important;animation:none!important}.field .tile{opacity:1}.gen h2{clip-path:none}}
+`;
+
+const NAMES = [["Mara","runners"],["Dev","indie games"],["Solomon","home espresso"],["Ines","new parents"],["Kai","crypto natives"],["Priya","B2B founders"],["Theo","night shift nurses"],["Lu","streetwear"],["Nora","gardeners"],["Jonah","fintech"],["Remy","film nerds"],["Sasha","climbers"],["Bea","teachers"],["Ozzy","DJs"],["Wren","cyclists"],["Ari","home cooks"],["Milo","PC builders"],["Zadie","travel"],["Fen","yoga"],["Cass","cars"],["Idris","chess"],["Tove","knitters"],["Rafi","podcasts"],["June","skincare"]];
+
+const DOCS=[
+ {id:"overview",t:"Overview",body:[
+  ["p","Rush lets an individual or a company create and run AI personas at scale. A persona is a fully developed digital identity with its own name, voice, personality and story. Every persona is labeled as AI and owned by the wallet that signed it."],
+  ["p","The idea is simple: everyone has a voice, and Rush gives you all of them. Instead of hiring more people or briefing a handful of influencers, you write one brief and launch dozens, hundreds or thousands of personas from it, each tuned to a niche and each honest about what it is."],
+  ["h","What Rush is not"],
+  ["p","Rush is not a sock-puppet tool. Personas cannot be presented as real humans, their disclosure line is part of the identity that gets fingerprinted and signed, and anyone can verify that claim. If you need undisclosed synthetic accounts, this is the wrong product."]]},
+ {id:"personas",t:"Personas",body:[
+  ["p","Each persona is generated from a brief and contains the following fields."],
+  ["l",["Name and handle","Intro: one spoken sentence the persona uses to introduce itself, including that it is an AI run by the owner","Voice profile: gender, pace, pitch and a short description of how it sounds","Personality: two sentences on how it behaves","Backstory: a short, plainly fictional history that never claims real credentials","Sample posts in the persona's voice","Disclosure line: the sentence it uses to tell audiences it is AI"]],
+  ["p","Personas that belong to the same owner can share memory about a product or brand, so a change to the brief propagates to the whole fleet."]]},
+ {id:"spawning",t:"Spawning",body:[
+  ["p","Open the Spawn section, choose whether a brand or a creator owns the persona, and fill in the brief: owner name, niche or audience, tone, and the job the persona should do."],
+  ["l",["Spawn one: generates a single persona in roughly ten seconds","Spawn three variants: generates three different takes on the same brief so you can pick the strongest","Hear the voice: plays the persona's intro and first post aloud using its voice profile","Sign with wallet: fingerprints the persona and asks your wallet to sign it"]],
+  ["p","Test a tone, watch what lands, scale the personas that work and retire the ones that don't. Spawning is cheap by design so you can iterate."]]},
+ {id:"ownership",t:"Ownership and the registry",body:[
+  ["p","The moment a persona is spawned, its identity (name, handle, voice profile, personality, disclosure line and owner name) is hashed with SHA-256 into a single fingerprint."],
+  ["p","The owner signs that fingerprint with their wallet. The signed message is a public, verifiable claim that says two things: this persona is AI, and this address is the one running it."],
+  ["l",["Ownership is a signature, not a row in our database. You hold it, not Rush.","Anyone can verify the claim against the fingerprint.","Nobody can quietly rebrand a signed persona as a real person, because the disclosure is inside the fingerprint."]],
+  ["h","What gets signed"],
+  ["c","Rush persona registry\nfingerprint: 0x…\nname: <persona name>\ndisclosed: AI persona\nowner: <wallet address>"]]},
+ {id:"crypto",t:"Crypto and payments",body:[
+  ["p","Rush does not have a token. Crypto is the ownership and payment layer under every persona."],
+  ["l",["Ownership: a wallet signature is the deed to a persona","Disclosure: the signed claim is how platforms, regulators or readers verify a persona is declared AI","Payments: plans bill in USDC from a connected wallet or in dollars by card, at the same price","Transfer and licensing: because ownership is cryptographic, personas move between wallets like any other digital asset"]],
+  ["p","Supported networks for signing include Ethereum mainnet, Base, Optimism, Arbitrum and Polygon. Connect a wallet from the button in the top bar or in the Registry section."]]},
+ {id:"licensing",t:"Licensing and transfers",body:[
+  ["p","A license is a time-boxed signature: the owner grants a brand the right to run a persona for a period, and the grant is signed by the owner's wallet. Rush takes a cut of every license."],
+  ["p","A transfer moves ownership from one wallet to another. The registry charges a small fee on each transfer. Through licensing and transfer the persona never stops being disclosed as AI; only the owner changes, and every change is signed."],
+  ["h","Illustrative lifecycle"],
+  ["l",["Day 0: a coffee brand briefs a runner persona. It is generated, fingerprinted and signed.","Week 1: it runs a trail-running channel, labeled as the brand's AI.","Month 3: a shoe brand licenses it for a launch month. The owner earns, Rush takes a cut.","Month 9: the owner sells it to an agency. Ownership moves wallet to wallet."]]]},
+ {id:"plans",t:"Plans",body:[
+  ["p","Rush is currently onboarding a first group of brands and creators from the waitlist. Plans are monthly and bill in USD by card or USDC on-chain."],
+  ["l",["Subscriptions: the core plan, priced per seat","Licensing: a cut of every persona license","Transfers: a small registry fee per transfer","Voice and tuning: custom voice cloning, dedicated model tuning and compliance reporting for larger fleets"]],
+  ["p","Pricing will be published when onboarding opens beyond the waitlist."]]},
+ {id:"responsibility",t:"Responsibility",body:[
+  ["p","Synthetic identity without disclosure is a sock puppet. It breaks platform rules, draws regulators, and burns the trust that makes any audience worth having."],
+  ["p","Rush builds the receipt into the product rather than offering it as a setting. Every persona carries its disclosure line, every persona is signed by an owner, and Rush will not generate personas that claim to be human or that claim real credentials."],
+  ["l",["Personas must be presented as AI wherever they operate","Owners are responsible for what their personas say; approval flows and a fleet-wide kill switch are provided","Rush cooperates with platform disclosure rules and provides compliance reporting on larger plans"]]]},
+ {id:"faq",t:"FAQ",body:[
+  ["h","Can a persona pretend to be a real person?"],["p","No. The disclosure line is part of the fingerprint and the model is instructed never to claim real credentials or humanity."],
+  ["h","Do I need a wallet to use Rush?"],["p","No. You can spawn and run personas without one. A wallet is needed to sign ownership, pay in USDC, license or transfer a persona."],
+  ["h","Who owns the personas I make?"],["p","You do, once you sign them. The signature lives with your wallet, not with Rush."],
+  ["h","Can I clone my own voice?"],["p","Yes, on creator plans. Voice cloning uses your own content and the result is always labeled as your AI."],
+  ["h","What happens if I stop paying?"],["p","Your personas stop running, but the signed ownership claims remain yours. Nothing about ownership depends on an active subscription."]]}
+];
+
+const CHAINS = {"0x1":"Ethereum mainnet","0x2105":"Base","0xa":"Optimism","0xa4b1":"Arbitrum","0x89":"Polygon","0xaa36a7":"Sepolia"};
+const THEMES = ["hero","band","who","gen","reg","docs","wait"];
+const short = a => a ? a.slice(0,6)+"…"+a.slice(-4) : "";
+
+async function sha256(s){if(!window.crypto?.subtle){let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))>>>0;return "0x"+h.toString(16).padStart(8,"0")}
+  const h=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return "0x"+[...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,"0")).join("");}
+
+async function genPersona(brief, seed){
+  const r = await fetch("/api/rush",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"spawn",...brief,seed})});
+  const d = await r.json();
+  if(!r.ok||d.error) throw new Error(d.error||"Spawn failed");
+  const p = d.persona; p.id = seed;
+  p.fp = await sha256(JSON.stringify({name:p.name,handle:p.handle,voice:p.voice,personality:p.personality,disclosure:p.disclosure,owner:brief.ownerName}));
+  return p;
+}
+
+function Field(){
+  const [go,setGo]=useState(false);
+  useEffect(()=>{const t=setTimeout(()=>setGo(true),400);return()=>clearTimeout(t)},[]);
+  return (
+    <div className={"field"+(go?" go":"")} aria-hidden="true">
+      <div className="tile you"><b>You</b>one voice</div>
+      {NAMES.map((n,i)=>{
+        const ring=i<8?1:i<16?2:3, ang=(i/8)*Math.PI*2+ring*.4, rad=ring*14.5*5;
+        const x=(Math.cos(ang)*rad).toFixed(1),y=(Math.sin(ang)*rad).toFixed(1),r=(i*37)%14-7;
+        return <div key={n[0]} className={"tile c"+((i%4)+1)} style={go?{opacity:1,transform:`translate(calc(-50% + ${x}%),calc(-50% + ${y}%)) rotate(${r}deg) scale(1)`,transitionDelay:(0.1+ring*0.18+(i%8)*0.03)+"s"}:{transitionDelay:(0.1+ring*0.18+(i%8)*0.03)+"s"}}><b>{n[0]}</b>{n[1]}</div>;
+      })}
+    </div>
+  );
+}
+
+function Card({p, brief, wallet, onSign, toast}){
+  const [speaking,setSpeaking]=useState(false);
+  const [sig,setSig]=useState(null);
+  const speak=()=>{
+    const ss=window.speechSynthesis; if(!ss){toast("Voice playback isn't supported in this browser");return}
+    ss.cancel();
+    const u=new SpeechSynthesisUtterance(`${p.intro} ${p.posts[0]}`);
+    const vs=ss.getVoices();
+    const pick=vs.find(v=>/en/i.test(v.lang)&&new RegExp(p.voice.gender||"","i").test(v.name))||vs.find(v=>/en/i.test(v.lang))||vs[0];
+    if(pick)u.voice=pick; u.rate=p.voice.rate||1; u.pitch=p.voice.pitch||1;
+    u.onend=()=>setSpeaking(false); setSpeaking(true); ss.speak(u);
+  };
+  const sign=async()=>{const s=await onSign(p); if(s)setSig(s)};
+  return (
+    <article className="card">
+      <h3>{p.name}</h3><span className="handle">{p.handle}</span>
+      <span className="ai">AI persona · owned by {brief.ownerName}</span>
+      <dl><dt>Sounds like</dt><dd>{p.voice.description}</dd><dt>Personality</dt><dd>{p.personality}</dd><dt>Backstory</dt><dd>{p.backstory}</dd><dt>Disclosure</dt><dd>{p.disclosure}</dd></dl>
+      <div className="posts">{p.posts.map((x,i)=><div className="post" key={i}>{x}</div>)}</div>
+      <div className="actions">
+        <button className="btn" onClick={speak}>{speaking?"Speaking…":"Hear the voice"}</button>
+        <button className="btn line" onClick={sign} disabled={!!sig}>{sig?"Signed by "+short(sig.addr):"Sign with wallet"}</button>
+      </div>
+      <div className="fp"><b>Fingerprint</b> {p.fp}{sig&&<div className="signed">Ownership claimed by {short(sig.addr)}</div>}</div>
+    </article>
+  );
+}
+
+class Boundary extends React.Component{
+  constructor(p){super(p);this.state={err:null}}
+  static getDerivedStateFromError(e){return {err:e}}
+  render(){return this.state.err?<pre style={{padding:24,color:"#b00",whiteSpace:"pre-wrap",fontFamily:"monospace"}}>Rush failed to render:\n{String(this.state.err?.stack||this.state.err)}</pre>:this.props.children}
+}
+function RushApp(){return <Boundary><Rush/></Boundary>}
+
+function Rush(){
+  const [theme,setTheme]=useState("hero");
+  const [genIn,setGenIn]=useState(false);
+  const [wallet,setWallet]=useState({addr:null,chain:null,signed:0,fp:"—",sig:"—"});
+  const [owner,setOwner]=useState("brand");
+  const [f,setF]=useState({ownerName:"",niche:"",tone:"Warm and direct",goal:""});
+  const [busy,setBusy]=useState(false);
+  const [status,setStatus]=useState("");
+  const [deck,setDeck]=useState([]);
+  const [toastMsg,setToastMsg]=useState("");
+  const [wl,setWl]=useState({email:"",role:"brand",note:""});
+  const [wlDone,setWlDone]=useState(false);
+  const [doc,setDoc]=useState("overview");
+  const [wlCount,setWlCount]=useState(null);
+  const toastT=useRef();
+  const refs=useRef({});
+
+  const toast=m=>{setToastMsg(m);clearTimeout(toastT.current);toastT.current=setTimeout(()=>setToastMsg(""),3200)};
+
+  useEffect(()=>{
+    const obs=[];
+    THEMES.forEach(k=>{const el=refs.current[k];if(!el||typeof IntersectionObserver==="undefined")return;
+      const o=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)setTheme(k)}),{rootMargin:"-45% 0px -45% 0px"});o.observe(el);obs.push(o)});
+    if(typeof IntersectionObserver==="undefined"){setGenIn(true);return()=>obs.forEach(o=>o.disconnect())}
+    const g=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)setGenIn(true)}),{threshold:.2});if(refs.current.gen)g.observe(refs.current.gen);obs.push(g);
+    window.speechSynthesis?.getVoices();
+    (async()=>{try{const r=await fetch("/api/rush");const d=await r.json();if(typeof d.count==="number")setWlCount(d.count)}catch(e){}})();
+    return()=>obs.forEach(o=>o.disconnect());
+  },[]);
+
+  const connect=async()=>{
+    const eth=window.ethereum;
+    if(!eth){toast("No wallet found. Open this page in a browser with MetaMask or a wallet app.");return null}
+    try{
+      const [addr]=await eth.request({method:"eth_requestAccounts"});
+      const chain=await eth.request({method:"eth_chainId"});
+      setWallet(w=>({...w,addr,chain}));toast("Wallet connected");
+      eth.on?.("accountsChanged",a=>setWallet(w=>({...w,addr:a[0]||null})));
+      eth.on?.("chainChanged",c=>setWallet(w=>({...w,chain:c})));
+      return addr;
+    }catch(e){toast("Connection cancelled");return null}
+  };
+
+  const onSign=async p=>{
+    let addr=wallet.addr; if(!addr){addr=await connect(); if(!addr)return null}
+    const msg=`Rush persona registry\nfingerprint: ${p.fp}\nname: ${p.name}\ndisclosed: AI persona\nowner: ${addr}`;
+    try{
+      const sig=await window.ethereum.request({method:"personal_sign",params:[msg,addr]});
+      setWallet(w=>({...w,signed:w.signed+1,fp:p.fp,sig}));toast("Persona registered to your wallet");
+      return {addr,sig};
+    }catch(e){toast("Signature cancelled");return null}
+  };
+
+  const joinWaitlist=async()=>{
+    const email=wl.email.trim();
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){toast("Enter a valid email address");return}
+    try{
+      const r=await fetch("/api/rush",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"waitlist",email,role:wl.role,note:wl.note,wallet:wallet.addr})});
+      const d=await r.json();
+      if(!r.ok) throw new Error(d.error||"failed");
+      if(typeof d.count==="number") setWlCount(d.count);
+      setWlDone(true);
+    }catch(e){toast("Couldn't save your spot. Try again in a moment.")}
+  };
+
+  const spawn=async n=>{
+    const brief={owner,...f,ownerName:f.ownerName.trim(),niche:f.niche.trim(),goal:f.goal.trim()};
+    if(!brief.ownerName||!brief.niche){setStatus("Add a name and a niche first.");return}
+    setBusy(true);setStatus(n>1?"Spawning three variants…":"Spawning…");
+    const res=await Promise.allSettled(Array.from({length:n},(_,i)=>genPersona(brief,Date.now()+i)));
+    const ok=res.filter(r=>r.status==="fulfilled").map(r=>({p:r.value,brief}));
+    setDeck(d=>[...ok,...d]);
+    setStatus(ok.length?`${ok.length} persona${ok.length>1?"s":""} ready. Hear it, then sign it to claim ownership.`:"Something went wrong: "+(res[0].reason?.message||"try again"));
+    setBusy(false);
+  };
+
+  const set=k=>e=>setF(v=>({...v,[k]:e.target.value}));
+  const ref=k=>el=>{refs.current[k]=el};
+  const go=k=>refs.current[k]?.scrollIntoView({behavior:"smooth",block:"start"});
+
+  return (
+    <div className="rush" data-t={theme}>
+      <style>{css}</style>
+      <nav className="nav">
+        <button className="mark" onClick={()=>go("hero")}>R<i>u</i>sh</button>
+        <ul>{[["who","Who it's for"],["gen","Spawn a persona"],["reg","Registry"],["docs","Docs"],["wait","Waitlist"]].map(([k,t])=><li key={k}><button className="navlink" onClick={()=>go(k)}>{t}</button></li>)}</ul>
+        <button className="wallet" onClick={connect}>{wallet.addr?short(wallet.addr):"Connect wallet"}</button>
+      </nav>
+
+      <section className="hero" id="top" ref={ref("hero")}>
+        <div>
+          <h1><span>Everyone has</span><span>a voice.</span><span className="many">We give you</span><span className="many">all of them.</span></h1>
+          <p>Rush turns one voice into a network of AI personas — each with its own name, sound, personality and story, each clearly labeled as AI, each owned by you on a public ledger. Reach every niche without cloning yourself a hundred times over.</p>
+          <button className="cta" onClick={()=>go("gen")}>Spawn your first persona</button>
+          <button className="cta ghost" onClick={()=>go("reg")}>See how ownership works</button>
+        </div>
+        <Field/>
+      </section>
+
+      <section className="band" ref={ref("band")}>
+        <div className="wrap">
+          <h2>Scaling used to mean hiring. Now it means multiplying.</h2>
+          <div>
+            <p>Attention is harder to earn and audiences expect to be spoken to directly. The old answer was bigger teams and more agencies. Rush replaces that with presence: launch a product with a persona for runners, one for gamers, one for new parents, one for the CFO who reads at 6am — all live at once, all on message, all around the clock.</p>
+            <p>Every persona is customizable. Test a tone, watch what lands, scale the ones that work and retire the ones that don't. Growth stops being a headcount problem.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="who" id="who" ref={ref("who")}>
+        <div className="wrap">
+          <h2>Built for brands and for the person who is the brand.</h2>
+          <div className="cols">
+            <div className="col">
+              <span className="tag">For brands</span>
+              <h3>A voice for every audience</h3>
+              <p>Instead of briefing five influencers, deploy fifty branded AI ambassadors — each tuned to a niche, each disclosed as yours. Product education, community replies, launch chatter, support that sounds human at 3am.</p>
+              <ul><li>Niche-specific ambassadors from a single brand brief</li><li>Shared memory so every persona knows the product</li><li>Approval flows and kill switches for the whole fleet</li><li>Ownership recorded on-chain under your company wallet</li></ul>
+            </div>
+            <div className="col">
+              <span className="tag">For creators</span>
+              <h3>Be a network, not a bottleneck</h3>
+              <p>Replicate your voice and personality into AI versions of you that answer DMs, run niche channels and keep posting while you sleep — tagged as your AI, so your audience always knows what's you and what's your team.</p>
+              <ul><li>Voice and personality cloned from your own content</li><li>Consistency at volume, without burning out</li><li>You approve what your personas say, or let them run</li><li>Personas are yours to keep, transfer or license</li></ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className={"gen"+(genIn?" in":"")} id="spawn" ref={ref("gen")}>
+        <div className="wrap">
+          <h2>Spawn a persona.</h2>
+          <p className="lead">Describe who it's for and what it's for. Rush writes the identity — name, voice, personality, backstory, sample posts — then reads it aloud and stamps it with a fingerprint you can sign.</p>
+          <div className="genGrid">
+            <div className="form">
+              <label>Who owns this persona
+                <div className="seg" role="group">
+                  <button type="button" aria-pressed={owner==="brand"} onClick={()=>setOwner("brand")}>A brand</button>
+                  <button type="button" aria-pressed={owner==="creator"} onClick={()=>setOwner("creator")}>A creator</button>
+                </div>
+              </label>
+              <label>Brand or creator name<input value={f.ownerName} onChange={set("ownerName")} placeholder="e.g. Kettle Coffee, or your own name"/></label>
+              <label>Niche or audience<input value={f.niche} onChange={set("niche")} placeholder="e.g. ultrarunners, indie game devs, first-time founders"/></label>
+              <label>Tone<select value={f.tone} onChange={set("tone")}>
+                {["Warm and direct","Dry and funny","Hype, high energy","Calm expert","Blunt contrarian"].map(t=><option key={t}>{t}</option>)}
+              </select></label>
+              <label>What should this persona do<textarea rows={2} value={f.goal} onChange={set("goal")} placeholder="e.g. answer product questions and post daily tips"/></label>
+              <div className="row">
+                <button className="btn" disabled={busy} onClick={()=>spawn(1)}>Spawn one</button>
+                <button className="btn line" disabled={busy} onClick={()=>spawn(3)}>Spawn three variants</button>
+              </div>
+              <div className="status" aria-live="polite">{status}</div>
+            </div>
+            <div className="deck">
+              {deck.length===0 && <div className="empty">No personas yet. Fill in the brief and spawn one — it takes about ten seconds. Each persona you make here is disclosed as AI and belongs to whoever signs it.</div>}
+              {deck.map(({p,brief})=><Card key={p.id} p={p} brief={brief} wallet={wallet} onSign={onSign} toast={toast}/>)}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="reg" id="registry" ref={ref("reg")}>
+        <div className="wrap">
+          <div>
+            <h2>Every persona carries a receipt.</h2>
+            <p>The moment a persona is spawned, Rush hashes its identity — name, voice profile, personality, disclosure — into a fingerprint. Sign that fingerprint with your wallet and it becomes a public claim: this persona is AI, and it belongs to this address.</p>
+            <p>Anyone can verify it. Nobody can quietly rebrand a persona as a real person. And because ownership is a signature, personas can be transferred, licensed or sold like any other digital asset.</p>
+            <button className="cta" onClick={connect}>{wallet.addr?short(wallet.addr):"Connect wallet"}</button>
+          </div>
+          <div className="ledger">
+            <div className="line"><span className="k">Wallet</span><span className={wallet.addr?"ok":"warn"}>{wallet.addr||"Not connected"}</span></div>
+            <div className="line"><span className="k">Network</span><span>{wallet.addr?(CHAINS[wallet.chain]||"Chain "+parseInt(wallet.chain,16)):"—"}</span></div>
+            <div className="line"><span className="k">Personas signed</span><span>{wallet.signed}</span></div>
+            <div className="line"><span className="k">Last fingerprint</span><span>{wallet.fp}</span></div>
+            <div className="line"><span className="k">Last signature</span><span>{wallet.sig}</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section className="docs" ref={ref("docs")}>
+        <div className="wrap">
+          <h2>Documentation</h2>
+          <p className="lead">How Rush works, what a persona is, and how ownership, payments and licensing fit together.</p>
+          <div className="docGrid">
+            <nav className="docNav" aria-label="Documentation topics">
+              {DOCS.map(x=><button key={x.id} aria-current={doc===x.id} onClick={()=>setDoc(x.id)}>{x.t}</button>)}
+            </nav>
+            <article className="docBody" key={doc}>
+              <h3>{DOCS.find(x=>x.id===doc).t}</h3>
+              {DOCS.find(x=>x.id===doc).body.map((blk,i)=>{
+                const [k,v]=blk;
+                if(k==="p")return <p key={i}>{v}</p>;
+                if(k==="h")return <h4 key={i}>{v}</h4>;
+                if(k==="l")return <ul key={i}>{v.map((li,j)=><li key={j}>{li}</li>)}</ul>;
+                if(k==="c")return <pre key={i}>{v}</pre>;
+                return null;
+              })}
+              <div className="docFoot">
+                {DOCS.findIndex(x=>x.id===doc)<DOCS.length-1 && <button className="btn line" onClick={()=>setDoc(DOCS[DOCS.findIndex(x=>x.id===doc)+1].id)}>Next: {DOCS[DOCS.findIndex(x=>x.id===doc)+1].t}</button>}
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section className="wait" ref={ref("wait")}>
+        <div className="wrap">
+          <h2>Get in before the rush.</h2>
+          <p className="sub">We're onboarding a small group of brands and creators first. Leave your email and we'll tell you when your spot opens.{wlCount!=null&&wlCount>0&&<> {wlCount.toLocaleString()} {wlCount===1?"person is":"people are"} already on the list.</>}</p>
+          {wlDone ? (
+            <div className="wlDone"><b>You're on the list.</b> We'll email {wl.email.trim()} when it's your turn. Connect a wallet above if you want your personas registered to it from day one.</div>
+          ) : (
+            <div className="wlForm">
+              <input type="email" value={wl.email} onChange={e=>setWl(v=>({...v,email:e.target.value}))} placeholder="you@company.com" aria-label="Email address" onKeyDown={e=>e.key==="Enter"&&joinWaitlist()}/>
+              <div className="seg dark" role="group">
+                {[["brand","I run a brand"],["creator","I'm a creator"],["agency","I'm an agency"]].map(([k,t])=><button type="button" key={k} aria-pressed={wl.role===k} onClick={()=>setWl(v=>({...v,role:k}))}>{t}</button>)}
+              </div>
+              <input value={wl.note} onChange={e=>setWl(v=>({...v,note:e.target.value}))} placeholder="What would you build with Rush? (optional)" aria-label="Note"/>
+              <button className="cta" onClick={joinWaitlist}>Join the waitlist</button>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <footer className="foot">
+        <div className="wrap">
+          <div className="mark">R<i>u</i>sh</div>
+          <p>Rush personas are always disclosed as AI and always traceable to an owner. That's not a limitation — it's the reason people will keep listening to them. Identity at scale, with a receipt.</p>
+        </div>
+      </footer>
+
+      <div className={"toast"+(toastMsg?" show":"")} role="status">{toastMsg}</div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<RushApp/>);
+
+</script>
+</body>
+</html>
