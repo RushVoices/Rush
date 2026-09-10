@@ -21,7 +21,7 @@
 <div id="root"></div>
 <script type="text/babel" data-presets="react">
 const { useState, useEffect, useRef } = React;
-
+ 
 const css = `
 [data-t=hero],[data-t=who],[data-t=reg],[data-t=wait]{--bg:#F2EFE7;--fg:#17153A}[data-t=band],[data-t=docs]{--bg:#17153A;--fg:#F2EFE7}[data-t=gen]{--bg:#2E3AFF;--fg:#fff}
 .rush{--paper:#F2EFE7;--ink:#17153A;--cobalt:#2E3AFF;--coral:#FF4D6D;--mist:#D9D6E8;--lime:#D8FF4A;
@@ -144,6 +144,14 @@ const css = `
 .seg.dark button{color:var(--fg)}
 .seg.dark button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
 .wlDone{background:var(--ink);color:var(--paper);border-radius:16px;padding:24px 26px;font-size:18px;max-width:560px;animation:land .6s cubic-bezier(.2,.9,.2,1)}
+.navRight{display:flex;align-items:center;gap:12px}
+.xlink{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:999px;border:1.5px solid currentColor;color:inherit;opacity:.85}
+.xlink:hover{opacity:1}
+.xFollow{display:inline-flex;align-items:center;gap:8px;color:var(--fg);font-weight:600;text-decoration:none;margin-top:8px;opacity:.8}
+.xFollow:hover{opacity:1;text-decoration:underline}
+.xInline{color:var(--lime);font-weight:600}
+.xFoot{display:inline-flex;align-items:center;gap:8px;color:var(--paper);font-weight:600;text-decoration:none;margin-top:16px;border:1.5px solid rgba(255,255,255,.35);padding:8px 14px;border-radius:999px}
+.xFoot:hover{border-color:var(--lime);color:var(--lime)}
 .foot{padding:60px clamp(20px,5vw,72px);background:var(--ink);color:var(--paper)}
 .foot .wrap{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:end}
 .foot .mark{font-size:60px}
@@ -153,9 +161,9 @@ const css = `
 .toast.show{transform:translate(-50%,0)}
 @media(prefers-reduced-motion:reduce){.rush *{transition:none!important;animation:none!important}.field .tile{opacity:1}.gen h2{clip-path:none}}
 `;
-
+ 
 const NAMES = [["Mara","runners"],["Dev","indie games"],["Solomon","home espresso"],["Ines","new parents"],["Kai","crypto natives"],["Priya","B2B founders"],["Theo","night shift nurses"],["Lu","streetwear"],["Nora","gardeners"],["Jonah","fintech"],["Remy","film nerds"],["Sasha","climbers"],["Bea","teachers"],["Ozzy","DJs"],["Wren","cyclists"],["Ari","home cooks"],["Milo","PC builders"],["Zadie","travel"],["Fen","yoga"],["Cass","cars"],["Idris","chess"],["Tove","knitters"],["Rafi","podcasts"],["June","skincare"]];
-
+ 
 const DOCS=[
  {id:"overview",t:"Overview",body:[
   ["p","Rush lets an individual or a company create and run AI personas at scale. A persona is a fully developed digital identity with its own name, voice, personality and story. Every persona is labeled as AI and owned by the wallet that signed it."],
@@ -200,14 +208,15 @@ const DOCS=[
   ["h","Can I clone my own voice?"],["p","Yes, on creator plans. Voice cloning uses your own content and the result is always labeled as your AI."],
   ["h","What happens if I stop paying?"],["p","Your personas stop running, but the signed ownership claims remain yours. Nothing about ownership depends on an active subscription."]]}
 ];
-
+ 
+const XIcon=()=><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2H21.5l-7.5 8.57L22.8 22h-6.9l-5.4-7.07L4.3 22H1.04l8.03-9.18L.6 2h7.07l4.88 6.45L18.244 2Zm-1.21 18.03h1.8L6.98 3.9H5.05l11.98 16.13Z"/></svg>;
 const CHAINS = {"0x1":"Ethereum mainnet","0x2105":"Base","0xa":"Optimism","0xa4b1":"Arbitrum","0x89":"Polygon","0xaa36a7":"Sepolia"};
 const THEMES = ["hero","band","who","gen","reg","docs","wait"];
 const short = a => a ? a.slice(0,6)+"…"+a.slice(-4) : "";
-
+ 
 async function sha256(s){if(!window.crypto?.subtle){let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))>>>0;return "0x"+h.toString(16).padStart(8,"0")}
   const h=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return "0x"+[...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,"0")).join("");}
-
+ 
 async function genPersona(brief, seed){
   const r = await fetch("/api/rush",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"spawn",...brief,seed})});
   const d = await r.json();
@@ -216,7 +225,7 @@ async function genPersona(brief, seed){
   p.fp = await sha256(JSON.stringify({name:p.name,handle:p.handle,voice:p.voice,personality:p.personality,disclosure:p.disclosure,owner:brief.ownerName}));
   return p;
 }
-
+ 
 function Field(){
   const [go,setGo]=useState(false);
   useEffect(()=>{const t=setTimeout(()=>setGo(true),400);return()=>clearTimeout(t)},[]);
@@ -231,7 +240,7 @@ function Field(){
     </div>
   );
 }
-
+ 
 function Card({p, brief, wallet, onSign, toast}){
   const [speaking,setSpeaking]=useState(false);
   const [sig,setSig]=useState(null);
@@ -259,14 +268,14 @@ function Card({p, brief, wallet, onSign, toast}){
     </article>
   );
 }
-
+ 
 class Boundary extends React.Component{
   constructor(p){super(p);this.state={err:null}}
   static getDerivedStateFromError(e){return {err:e}}
   render(){return this.state.err?<pre style={{padding:24,color:"#b00",whiteSpace:"pre-wrap",fontFamily:"monospace"}}>Rush failed to render:\n{String(this.state.err?.stack||this.state.err)}</pre>:this.props.children}
 }
 function RushApp(){return <Boundary><Rush/></Boundary>}
-
+ 
 function Rush(){
   const [theme,setTheme]=useState("hero");
   const [genIn,setGenIn]=useState(false);
@@ -283,9 +292,9 @@ function Rush(){
   const [wlCount,setWlCount]=useState(null);
   const toastT=useRef();
   const refs=useRef({});
-
+ 
   const toast=m=>{setToastMsg(m);clearTimeout(toastT.current);toastT.current=setTimeout(()=>setToastMsg(""),3200)};
-
+ 
   useEffect(()=>{
     const obs=[];
     THEMES.forEach(k=>{const el=refs.current[k];if(!el||typeof IntersectionObserver==="undefined")return;
@@ -296,7 +305,7 @@ function Rush(){
     (async()=>{try{const r=await fetch("/api/rush");const d=await r.json();if(typeof d.count==="number")setWlCount(d.count)}catch(e){}})();
     return()=>obs.forEach(o=>o.disconnect());
   },[]);
-
+ 
   const connect=async()=>{
     const eth=window.ethereum;
     if(!eth){toast("No wallet found. Open this page in a browser with MetaMask or a wallet app.");return null}
@@ -309,7 +318,7 @@ function Rush(){
       return addr;
     }catch(e){toast("Connection cancelled");return null}
   };
-
+ 
   const onSign=async p=>{
     let addr=wallet.addr; if(!addr){addr=await connect(); if(!addr)return null}
     const msg=`Rush persona registry\nfingerprint: ${p.fp}\nname: ${p.name}\ndisclosed: AI persona\nowner: ${addr}`;
@@ -319,7 +328,7 @@ function Rush(){
       return {addr,sig};
     }catch(e){toast("Signature cancelled");return null}
   };
-
+ 
   const joinWaitlist=async()=>{
     const email=wl.email.trim();
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){toast("Enter a valid email address");return}
@@ -331,7 +340,7 @@ function Rush(){
       setWlDone(true);
     }catch(e){toast("Couldn't save your spot. Try again in a moment.")}
   };
-
+ 
   const spawn=async n=>{
     const brief={owner,...f,ownerName:f.ownerName.trim(),niche:f.niche.trim(),goal:f.goal.trim()};
     if(!brief.ownerName||!brief.niche){setStatus("Add a name and a niche first.");return}
@@ -342,20 +351,23 @@ function Rush(){
     setStatus(ok.length?`${ok.length} persona${ok.length>1?"s":""} ready. Hear it, then sign it to claim ownership.`:"Something went wrong: "+(res[0].reason?.message||"try again"));
     setBusy(false);
   };
-
+ 
   const set=k=>e=>setF(v=>({...v,[k]:e.target.value}));
   const ref=k=>el=>{refs.current[k]=el};
   const go=k=>refs.current[k]?.scrollIntoView({behavior:"smooth",block:"start"});
-
+ 
   return (
     <div className="rush" data-t={theme}>
       <style>{css}</style>
       <nav className="nav">
         <button className="mark" onClick={()=>go("hero")}>R<i>u</i>sh</button>
         <ul>{[["who","Who it's for"],["gen","Spawn a persona"],["reg","Registry"],["docs","Docs"],["wait","Waitlist"]].map(([k,t])=><li key={k}><button className="navlink" onClick={()=>go(k)}>{t}</button></li>)}</ul>
-        <button className="wallet" onClick={connect}>{wallet.addr?short(wallet.addr):"Connect wallet"}</button>
+        <div className="navRight">
+          <a className="xlink" href="https://x.com/rushvoices" target="_blank" rel="noopener noreferrer" aria-label="Rush on X"><XIcon/></a>
+          <button className="wallet" onClick={connect}>{wallet.addr?short(wallet.addr):"Connect wallet"}</button>
+        </div>
       </nav>
-
+ 
       <section className="hero" id="top" ref={ref("hero")}>
         <div>
           <h1><span>Everyone has</span><span>a voice.</span><span className="many">We give you</span><span className="many">all of them.</span></h1>
@@ -365,7 +377,7 @@ function Rush(){
         </div>
         <Field/>
       </section>
-
+ 
       <section className="band" ref={ref("band")}>
         <div className="wrap">
           <h2>Scaling used to mean hiring. Now it means multiplying.</h2>
@@ -375,7 +387,7 @@ function Rush(){
           </div>
         </div>
       </section>
-
+ 
       <section className="who" id="who" ref={ref("who")}>
         <div className="wrap">
           <h2>Built for brands and for the person who is the brand.</h2>
@@ -395,7 +407,7 @@ function Rush(){
           </div>
         </div>
       </section>
-
+ 
       <section className={"gen"+(genIn?" in":"")} id="spawn" ref={ref("gen")}>
         <div className="wrap">
           <h2>Spawn a persona.</h2>
@@ -427,7 +439,7 @@ function Rush(){
           </div>
         </div>
       </section>
-
+ 
       <section className="reg" id="registry" ref={ref("reg")}>
         <div className="wrap">
           <div>
@@ -445,7 +457,7 @@ function Rush(){
           </div>
         </div>
       </section>
-
+ 
       <section className="docs" ref={ref("docs")}>
         <div className="wrap">
           <h2>Documentation</h2>
@@ -471,13 +483,13 @@ function Rush(){
           </div>
         </div>
       </section>
-
+ 
       <section className="wait" ref={ref("wait")}>
         <div className="wrap">
           <h2>Get in before the rush.</h2>
           <p className="sub">We're onboarding a small group of brands and creators first. Leave your email and we'll tell you when your spot opens.{wlCount!=null&&wlCount>0&&<> {wlCount.toLocaleString()} {wlCount===1?"person is":"people are"} already on the list.</>}</p>
           {wlDone ? (
-            <div className="wlDone"><b>You're on the list.</b> We'll email {wl.email.trim()} when it's your turn. Connect a wallet above if you want your personas registered to it from day one.</div>
+            <div className="wlDone"><b>Confirmed — you're on the waitlist.</b><br/>We've saved {wl.email.trim()} and will email you the moment your spot opens. Connect a wallet above if you want your personas registered to it from day one. <a className="xInline" href="https://x.com/rushvoices" target="_blank" rel="noopener noreferrer">Follow @rushvoices on X</a> for updates.</div>
           ) : (
             <div className="wlForm">
               <input type="email" value={wl.email} onChange={e=>setWl(v=>({...v,email:e.target.value}))} placeholder="you@company.com" aria-label="Email address" onKeyDown={e=>e.key==="Enter"&&joinWaitlist()}/>
@@ -486,25 +498,30 @@ function Rush(){
               </div>
               <input value={wl.note} onChange={e=>setWl(v=>({...v,note:e.target.value}))} placeholder="What would you build with Rush? (optional)" aria-label="Note"/>
               <button className="cta" onClick={joinWaitlist}>Join the waitlist</button>
+              <a className="xFollow" href="https://x.com/rushvoices" target="_blank" rel="noopener noreferrer"><XIcon/> Follow @rushvoices for updates</a>
             </div>
           )}
         </div>
       </section>
-
+ 
       <footer className="foot">
         <div className="wrap">
           <div className="mark">R<i>u</i>sh</div>
-          <p>Rush personas are always disclosed as AI and always traceable to an owner. That's not a limitation — it's the reason people will keep listening to them. Identity at scale, with a receipt.</p>
+          <div>
+            <p>Rush personas are always disclosed as AI and always traceable to an owner. That's not a limitation — it's the reason people will keep listening to them. Identity at scale, with a receipt.</p>
+            <a className="xFoot" href="https://x.com/rushvoices" target="_blank" rel="noopener noreferrer"><XIcon/> @rushvoices</a>
+          </div>
         </div>
       </footer>
-
+ 
       <div className={"toast"+(toastMsg?" show":"")} role="status">{toastMsg}</div>
     </div>
   );
 }
-
+ 
 ReactDOM.createRoot(document.getElementById("root")).render(<RushApp/>);
-
+ 
 </script>
 </body>
 </html>
+ 
