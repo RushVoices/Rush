@@ -97,6 +97,7 @@ const css = `
 .card h3{font-size:29px;font-weight:800}
 .card .handle{font-weight:600;color:var(--cobalt)}
 .card .ai{grid-column:1/-1;display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;background:var(--ink);color:var(--paper);padding:5px 12px;border-radius:999px;width:max-content;max-width:100%}
+.card .offline{grid-column:1/-1;font-size:12px;font-weight:600;color:#5b588a;margin-top:-2px}
 .card .ai::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--lime);flex:none}
 .card dl{grid-column:1/-1;display:grid;grid-template-columns:105px 1fr;gap:8px 14px;margin-top:10px;font-size:15px}
 .card dt{font-weight:600;color:#5b588a}
@@ -217,11 +218,52 @@ const short = a => a ? a.slice(0,6)+"…"+a.slice(-4) : "";
 async function sha256(s){if(!window.crypto?.subtle){let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))>>>0;return "0x"+h.toString(16).padStart(8,"0")}
   const h=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return "0x"+[...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,"0")).join("");}
  
+ 
+// ---- Offline fallback generator (no API key needed). Used only when /api/rush is unavailable. ----
+const LP={
+  first:["Mara","Dev","Ines","Kai","Priya","Theo","Lu","Nora","Jonah","Remy","Sasha","Bea","Ozzy","Wren","Ari","Milo","Zadie","Fen","Cass","Idris","Tove","Rafi","June","Solomon","Nadia","Elio","Hana","Bram","Yara","Otis"],
+  last:["Okafor","Lindqvist","Moreno","Achebe","Sato","Delacroix","Haddad","Novak","Petrova","Banerjee","Costa","Byrne","Adeyemi","Kowalski","Fournier","Ito"],
+  sound:{"Warm and direct":["Warm, unhurried, laughs mid-sentence","Low and steady, like a good radio host","Friendly, close to the mic, no filler"],
+    "Dry and funny":["Deadpan, quick, pauses before the punchline","Flat delivery that makes the jokes land harder","Bone-dry, slightly nasal, always amused"],
+    "Hype, high energy":["Fast, bright, leans into every sentence","Big energy, half-shouting, contagious","Upbeat and punchy, never sits still"],
+    "Calm expert":["Measured and clear, explains without hurry","Quiet authority, every word chosen","Even, patient, sounds like they've done this before"],
+    "Blunt contrarian":["Clipped, direct, doesn't soften anything","Sharp and skeptical, a little gravelly","Straight-talking with an edge of impatience"]},
+  pers:{"Warm and direct":"Encouraging without being saccharine. Says the hard thing kindly and then stays for the follow-up.",
+    "Dry and funny":"Finds the joke in everything but never punches down. Underneath the sarcasm is someone who really pays attention.",
+    "Hype, high energy":"Celebrates small wins loudly. Turns every question into a reason to get excited about what's next.",
+    "Calm expert":"Slows things down when everyone else is panicking. Prefers one good answer to five fast ones.",
+    "Blunt contrarian":"Disagrees on principle until convinced. Respects people who push back and says so."},
+  hooks:["Quick one for the {n} crowd:","Hot take from the {n} corner:","Something I keep seeing in {n}:","For everyone new to {n} this week:","Small {n} win today:","Unpopular opinion in {n}:"],
+  bodies:["the basics still beat the hacks. Get the fundamentals boringly right first.","stop optimizing what you haven't tried yet. Do the thing, then tune it.","the people who last are the ones who make it a routine, not an event.","ask the dumb question early. It's cheaper than the smart mistake later.","consistency is the whole strategy. Everything else is decoration.","most advice is someone describing what worked for them once. Test it on yourself."],
+  closers:["What's working for you?","Reply and I'll answer the good ones.","Save this for the next time you doubt it.","Tag someone who needs to hear it.","More on this tomorrow.","Prove me wrong."]
+};
+function rng(seed){let x=(seed>>>0)||1;return()=>{x^=x<<13;x^=x>>>17;x^=x<<5;return ((x>>>0)%10000)/10000}}
+function localPersona(brief,seed){
+  const r=rng(seed); const pick=a=>a[Math.floor(r()*a.length)];
+  const fn=pick(LP.first), ln=pick(LP.last), n=brief.niche.trim().toLowerCase();
+  const tone=LP.sound[brief.tone]?brief.tone:"Warm and direct";
+  const handle="@"+fn.toLowerCase()+"."+n.replace(/[^a-z0-9]+/g,"").slice(0,10);
+  const gender=pick(["female","male","neutral"]);
+  const posts=Array.from({length:3},()=>`${pick(LP.hooks).replace("{n}",n)} ${pick(LP.bodies)} ${pick(LP.closers)}`);
+  const job=brief.goal||"help people in "+n;
+  return {name:fn+" "+ln,handle,gender,
+    intro:`Hi, I'm ${fn}, an AI persona run by ${brief.ownerName}, here for the ${n} community.`,
+    voice:{gender,rate:+(0.9+r()*0.25).toFixed(2),pitch:+(0.85+r()*0.4).toFixed(2),description:pick(LP.sound[tone])},
+    personality:LP.pers[tone],
+    backstory:`${fn} was written for ${brief.ownerName} to ${job}. Everything about ${fn} is invented: no real credentials, no real history, just a consistent voice built for ${n}.`,
+    posts,disclosure:`I'm ${fn}, an AI persona run by ${brief.ownerName}. Not a real person, always happy to talk ${n}.`,offline:true};
+}
+ 
+const USE_API=false; // set to true later if you add an ANTHROPIC_API_KEY on Vercel
 async function genPersona(brief, seed){
-  const r = await fetch("/api/rush",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"spawn",...brief,seed})});
-  const d = await r.json();
-  if(!r.ok||d.error) throw new Error(d.error||"Spawn failed");
-  const p = d.persona; p.id = seed;
+  let p=null;
+  if(USE_API) try{
+    const r = await fetch("/api/rush",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"spawn",...brief,seed})});
+    const d = await r.json();
+    if(r.ok && d.persona) p=d.persona;
+  }catch(e){}
+  if(!p) p=localPersona(brief,seed);
+  p.id = seed;
   p.fp = await sha256(JSON.stringify({name:p.name,handle:p.handle,voice:p.voice,personality:p.personality,disclosure:p.disclosure,owner:brief.ownerName}));
   return p;
 }
