@@ -11,7 +11,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg transform='rotate(-14 62 38)'%3E%3Crect x='42' y='18' width='40' height='40' rx='9' fill='%2317153A'/%3E%3C/g%3E%3Cg transform='rotate(-7 54 50)'%3E%3Crect x='33' y='29' width='42' height='42' rx='9.5' fill='%232E3AFF'/%3E%3C/g%3E%3Crect x='22' y='40' width='44' height='44' rx='10' fill='%23FF4D6D'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>html,body{margin:0;background:#F2EFE7}#root:empty::before{content:"Loading Rush…";display:block;padding:40px;font-family:sans-serif;color:#17153A}</style>
 <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
 <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
@@ -27,13 +27,13 @@ const css = `
 .rush{--paper:#F2EFE7;--ink:#17153A;--cobalt:#2E3AFF;--coral:#FF4D6D;--mist:#D9D6E8;--lime:#D8FF4A;
  font-family:'Instrument Sans',-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--fg);transition:background .9s cubic-bezier(.6,0,.2,1),color .9s;line-height:1.5;overflow-x:hidden}
 .rush *{box-sizing:border-box;margin:0;padding:0}
-.rush h1,.rush h2,.rush h3{font-family:'Syne','Avenir Next','Helvetica Neue',Arial,sans-serif;letter-spacing:-.02em;line-height:1}
+.rush h1,.rush h2,.rush h3{font-family:'Inter Tight','Avenir Next','Helvetica Neue',Arial,sans-serif;letter-spacing:-.03em;line-height:1.02}
 .rush section{padding:clamp(70px,11vh,130px) clamp(20px,5vw,72px);position:relative}
 .rush .wrap{max-width:1200px;margin:0 auto}
 .rush button{font:inherit;cursor:pointer}
 .rush :focus-visible{outline:3px solid var(--coral);outline-offset:3px}
 .nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:16px clamp(20px,5vw,72px);mix-blend-mode:difference;color:#fff}
-.mark{font-family:'Syne','Avenir Next','Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:28px;letter-spacing:-.05em;text-decoration:none;color:inherit}
+.mark{font-family:'Inter Tight','Avenir Next','Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:26px;letter-spacing:-.04em;text-decoration:none;color:inherit}
 .mark i{font-style:normal;display:inline-block;transform:skewX(-14deg)}
 .nav ul{display:flex;gap:26px;list-style:none;font-weight:500}
 .navlink{background:none;border:0;color:inherit;opacity:.8;font-weight:500;font-size:16px;padding:0}.navlink:hover{opacity:1}
@@ -41,17 +41,17 @@ const css = `
 @media(max-width:760px){.nav ul{display:none}}
 .wallet{border:1.5px solid currentColor;background:transparent;color:inherit;padding:9px 16px;border-radius:999px;font-weight:600;font-size:14px}
 .hero{min-height:100svh;display:grid;grid-template-columns:1.1fr 1fr;gap:40px;align-items:center}
-.hero h1{font-size:clamp(44px,7vw,108px);font-weight:800;line-height:.92}
+.hero h1{font-size:clamp(36px,4.8vw,72px);font-weight:700;line-height:1.02}
 .hero h1 span{display:block}
 .hero h1 .many{color:var(--cobalt)}
-.hero p{font-size:clamp(17px,1.5vw,21px);max-width:44ch;margin:26px 0 34px}
+.hero p{font-size:clamp(16px,1.25vw,19px);max-width:46ch;margin:22px 0 30px}
 .cta{display:inline-flex;align-items:center;background:var(--fg);color:var(--bg);border:0;padding:15px 24px;border-radius:999px;font-weight:600;font-size:16px;text-decoration:none;transition:transform .2s;margin:0 10px 10px 0}
 .cta:hover{transform:translateY(-2px)}
 .cta.ghost{background:transparent;color:var(--fg);border:1.5px solid var(--fg)}
 @media(max-width:900px){.hero{grid-template-columns:1fr;padding-top:70px}}
 .field{position:relative;aspect-ratio:1;max-width:540px;width:100%;margin-inline:auto}
 .tile{position:absolute;left:50%;top:50%;width:19%;aspect-ratio:1;border-radius:12px;background:var(--ink);color:var(--paper);display:flex;flex-direction:column;justify-content:flex-end;padding:8px;font-size:clamp(9px,.9vw,12px);line-height:1.15;transform:translate(-50%,-50%) scale(.2);opacity:0;transition:transform 1.1s cubic-bezier(.2,.9,.2,1),opacity .6s}
-.tile b{font-family:'Syne','Avenir Next','Helvetica Neue',Arial,sans-serif;font-size:1.15em;display:block;margin-bottom:2px}
+.tile b{font-family:'Inter Tight','Avenir Next','Helvetica Neue',Arial,sans-serif;font-size:1.15em;display:block;margin-bottom:2px}
 .tile.you{background:var(--coral);z-index:2;transform:translate(-50%,-50%) scale(1);opacity:1;font-size:clamp(11px,1.1vw,14px)}
 .tile.c1{background:var(--cobalt)}.tile.c3{background:#5A5BFF}.tile.c4{background:#2A2760}
 .field.go .tile.you{transform:translate(-50%,-50%) scale(.85)}
